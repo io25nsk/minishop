@@ -1,0 +1,32 @@
+[{
+  "_id": {
+    "$oid": "671f38244c0b7d4a8caa71a9"
+  },
+  "pid": "6707956239445e8693a16362",
+  "code": "IPHONE15",
+  "discount": 0.15
+},
+{
+  "_id": {
+    "$oid": "671f389b4c0b7d4a8caa71ad"
+  },
+  "pid": "67111d4a4c0b7d4a8caa7143",
+  "code": "LG50",
+  "discount": 0.5
+},
+{
+  "_id": {
+    "$oid": "671f392d4c0b7d4a8caa71b1"
+  },
+  "pid": "Global",
+  "code": "MINISHOP10",
+  "discount": 0.1
+},
+{
+  "_id": {
+    "$oid": "671f396f4c0b7d4a8caa71b2"
+  },
+  "pid": "Global",
+  "code": "MINISHOP20",
+  "discount": 0.2
+}]

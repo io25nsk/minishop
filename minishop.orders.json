@@ -1,0 +1,93 @@
+[{
+  "_id": {
+    "$oid": "672d57755ea648a1bff8ad08"
+  },
+  "uid": "671210a24c0b7d4a8caa715a",
+  "date": "2024-11-08T07:12:37.473735",
+  "products": [
+    {
+      "pid": "6707956239445e8693a16362",
+      "price": 120000,
+      "quantity": 2,
+      "summ": 240000
+    }
+  ],
+  "promocodes": [
+    "LG50",
+    "MINISHOP20"
+  ],
+  "global_discount": 0.2,
+  "global_discount_summ": 48000,
+  "total": 240000,
+  "total_with_discount": 192000,
+  "status": "Expired",
+  "pay_date": null,
+  "pay_id": null,
+  "pay_status": null,
+  "pay_system": null
+},
+{
+  "_id": {
+    "$oid": "672d5863097669defb54b2d4"
+  },
+  "uid": "671210a24c0b7d4a8caa715a",
+  "date": "2024-11-08T07:16:35.486509",
+  "products": [
+    {
+      "pid": "6707956239445e8693a16362",
+      "price": 120000,
+      "quantity": 2,
+      "summ": 240000
+    }
+  ],
+  "promocodes": [
+    "LG50",
+    "MINISHOP20"
+  ],
+  "global_discount": 0.2,
+  "global_discount_summ": 48000,
+  "total": 240000,
+  "total_with_discount": 192000,
+  "status": "Paid",
+  "pay_date": "2024-11-08T07:16:35.491554",
+  "pay_id": "3632745404bc4b90b06eb41df1fc6414",
+  "pay_status": "Successful",
+  "pay_system": "VISA"
+},
+{
+  "_id": {
+    "$oid": "672d7d48d6a05b12ede836d5"
+  },
+  "uid": "671210a24c0b7d4a8caa715a",
+  "date": "2024-11-08T09:54:00.924017",
+  "products": [
+    {
+      "pid": "6707956239445e8693a16362",
+      "price": 120000,
+      "quantity": 2,
+      "summ": 240000,
+      "discount": 0.15,
+      "discount_summ": 36000,
+      "summ_with_discount": 204000,
+      "return_quantity": 1,
+      "return_summ": 81600,
+      "return_status": "Returned",
+      "return_dates": [
+        "2024-11-08T09:54:00.939444"
+      ]
+    }
+  ],
+  "promocodes": [
+    "IPHONE15",
+    "MINISHOP20"
+  ],
+  "global_discount": 0.2,
+  "global_discount_summ": 40800,
+  "total": 204000,
+  "total_with_discount": 163200,
+  "status": "Returned",
+  "pay_date": "2024-11-08T09:54:00.929022",
+  "pay_id": "2d4e3b7ce881491bba351177cacd3d58",
+  "pay_status": "Successful",
+  "pay_system": "VISA"
+}]

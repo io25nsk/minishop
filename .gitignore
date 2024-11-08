@@ -1,0 +1,7 @@
+.idea
+venv
+
+.pytest*
+
+__pycache__
+*.py[com]
