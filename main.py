@@ -5,8 +5,8 @@ from fastapi import FastAPI, BackgroundTasks, Path
 from pydantic import AfterValidator
 
 import helpers
-from database import *
-from models import *
+from database import ORDER_COLLECTION, PRODUCTS_COLLECTION
+from models import Cart, Order, ProductReturn, PayData, check_common_ids
 
 app = FastAPI()
 
@@ -17,7 +17,7 @@ async def get_all_products() -> list | dict:
     Return all products.
     """
     result = []
-    all_products = products_collection.find()
+    all_products = PRODUCTS_COLLECTION.find()
 
     if all_products:
         for product in await all_products.to_list():
@@ -32,7 +32,7 @@ async def get_product(pid: str = Path(annotation=Annotated[str, AfterValidator(c
     """
     Return product with that pid.
     """
-    product = await products_collection.find_one({'_id': ObjectId(pid)})
+    product = await PRODUCTS_COLLECTION.find_one({'_id': ObjectId(pid)})
 
     if product:
         return helpers.product_helper(product)
@@ -87,7 +87,7 @@ async def get_user_orders(uid: str = Path(annotation=Annotated[str, AfterValidat
     Return orders for that uid.
     """
     result = []
-    orders = orders_collection.find({'uid': uid})
+    orders = ORDER_COLLECTION.find({'uid': uid})
 
     for order in await orders.to_list():
         order['id'] = str(order.pop('_id'))
@@ -128,7 +128,7 @@ async def return_order(data: ProductReturn,
     """
     Return products from order with that oid.
     """
-    order = await orders_collection.find_one({'_id': ObjectId(oid)})
+    order = await ORDER_COLLECTION.find_one({'_id': ObjectId(oid)})
 
     if order:
         return await helpers.order_return_helper(oid, data)
@@ -142,7 +142,7 @@ async def status_return_order(oid: str = Path(annotation=Annotated[str,
     """
     Return status of returned products for that oid.
     """
-    order = await orders_collection.find_one({'_id': ObjectId(oid)})
+    order = await ORDER_COLLECTION.find_one({'_id': ObjectId(oid)})
 
     if order:
         return await helpers.order_return_status_helper(order)

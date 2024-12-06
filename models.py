@@ -8,10 +8,6 @@ def check_common_ids(_id: str, info: ValidationInfo) -> str:
     return _id
 
 
-class CommonID(str):
-    def __init__(self, _id):
-        self.id = _id
-
 
 class Cart(BaseModel):
     uid: str

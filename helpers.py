@@ -2,8 +2,8 @@ from fastapi import BackgroundTasks
 import asyncio
 from datetime import datetime as dt
 from bson.objectid import ObjectId
-from database import *
-from models import *
+from database import USERS_COLLECTION, ORDER_COLLECTION, CARTS_COLLECTION, PRODUCTS_COLLECTION, PROMOCODES_COLLECTION
+from models import Cart, Order, ProductReturn
 import paysystem_mock
 
 
@@ -20,7 +20,7 @@ async def get_user_cid(data: Cart | Order = None, _uid: str = None) -> str | Non
     Return cid of cart for user with that uid.
     """
     uid = _uid if _uid else data.uid
-    user = await users_collection.find_one({'_id': ObjectId(uid)})
+    user = await USERS_COLLECTION.find_one({'_id': ObjectId(uid)})
     if user:
         return user['cid']
 
@@ -30,17 +30,17 @@ async def order_pay_timer(seconds: int, oid: str) -> None:
     Wait number of seconds and check order oid, if order not paid, set status "Expired".
     """
     await asyncio.sleep(seconds)
-    order = await orders_collection.find_one({'_id': ObjectId(oid)})
+    order = await ORDER_COLLECTION.find_one({'_id': ObjectId(oid)})
     if order['status'] == 'Created':
         order['status'] = 'Expired'
-        await orders_collection.update_one({'_id': ObjectId(oid)}, {'$set': order})
+        await ORDER_COLLECTION.update_one({'_id': ObjectId(oid)}, {'$set': order})
 
 
 async def cart_helper(cid: str) -> dict:
     """
     Return cart for that uid.
     """
-    cart = await carts_collection.find_one({"_id": ObjectId(cid)})
+    cart = await CARTS_COLLECTION.find_one({"_id": ObjectId(cid)})
     result = {'id': str(cart['_id']),
               'products': [],
               'total': cart['total']}
@@ -49,7 +49,7 @@ async def cart_helper(cid: str) -> dict:
         pid = item['pid']
         quantity = item['quantity']
         summ = item['summ']
-        product = await products_collection.find_one({'_id': ObjectId(pid)})
+        product = await PRODUCTS_COLLECTION.find_one({'_id': ObjectId(pid)})
         product = product_helper(product)
         product['quantity'] = quantity
         product['summ'] = summ
@@ -63,8 +63,8 @@ async def cart_add_helper(data: Cart, cid: str) -> dict:
     Add to cart of user with uid quantity of products with pid.
     """
     uid, pid, quantity = data.model_dump().values()
-    cart = await carts_collection.find_one({'_id': ObjectId(cid)})
-    product = await products_collection.find_one({'_id': ObjectId(pid)})
+    cart = await CARTS_COLLECTION.find_one({'_id': ObjectId(cid)})
+    product = await PRODUCTS_COLLECTION.find_one({'_id': ObjectId(pid)})
 
     if product:
         price = product['price']
@@ -84,7 +84,7 @@ async def cart_add_helper(data: Cart, cid: str) -> dict:
                           'summ': quantity * price}]
 
         total += price * quantity
-        result = await carts_collection.update_one({'_id': ObjectId(cid)},
+        result = await CARTS_COLLECTION.update_one({'_id': ObjectId(cid)},
                                                    {'$set': {'products': products, 'total': total}})
 
         if result.acknowledged:
@@ -100,8 +100,8 @@ async def cart_del_helper(uid, cid, pid, quantity) -> dict:
     """
     Remove product with pid from cart for user with uid.
     """
-    cart = await carts_collection.find_one({'_id': ObjectId(cid)})
-    product = await products_collection.find_one({'_id': ObjectId(pid)})
+    cart = await CARTS_COLLECTION.find_one({'_id': ObjectId(cid)})
+    product = await PRODUCTS_COLLECTION.find_one({'_id': ObjectId(pid)})
 
     if product:
         price = product['price']
@@ -120,7 +120,7 @@ async def cart_del_helper(uid, cid, pid, quantity) -> dict:
                 products[product_index]['quantity'] -= quantity
                 products[product_index]['summ'] -= price * quantity
             total -= price * quantity
-            result = await carts_collection.update_one({'_id': ObjectId(cid)},
+            result = await CARTS_COLLECTION.update_one({'_id': ObjectId(cid)},
                                                        {'$set': {'products': products, 'total': total}})
 
             if result.acknowledged:
@@ -141,7 +141,7 @@ async def order_add_helper(data: Order, cid: str, background_task: BackgroundTas
     """
     global_discount = 0
     uid, promocodes, pay_timeout = data.model_dump().values()
-    cart = await carts_collection.find_one({"_id": ObjectId(cid)})
+    cart = await CARTS_COLLECTION.find_one({"_id": ObjectId(cid)})
     products = cart['products']
     extra_fields = {'discount': 0,
                     'discount_summ': 0,
@@ -173,7 +173,7 @@ async def order_add_helper(data: Order, cid: str, background_task: BackgroundTas
         product.update(extra_fields)
 
     for promocode in promocodes:
-        code = await promocodes_collection.find_one({"code": promocode})
+        code = await PROMOCODES_COLLECTION.find_one({"code": promocode})
 
         if code:
             pid = code['pid']
@@ -197,10 +197,10 @@ async def order_add_helper(data: Order, cid: str, background_task: BackgroundTas
         else:
             return {'error': f'Promocode {promocode} not found'}
 
-    result_order = await orders_collection.insert_one(order)
+    result_order = await ORDER_COLLECTION.insert_one(order)
 
     if result_order:
-        await carts_collection.update_one({'_id': ObjectId(cid)}, {'$set': {'products': [], 'total': 0}})
+        await CARTS_COLLECTION.update_one({'_id': ObjectId(cid)}, {'$set': {'products': [], 'total': 0}})
         oid = result_order.inserted_id
 
         if pay_timeout:
@@ -215,7 +215,7 @@ async def order_pay_helper(oid: str, pay_system: str) -> dict:
     """
     Pay order with that data.
     """
-    order = await orders_collection.find_one({"_id": ObjectId(oid)})
+    order = await ORDER_COLLECTION.find_one({"_id": ObjectId(oid)})
 
     if order['status'] in ('Paid', 'Returned'):
         return {'error': f'Order {oid} already paid.'}
@@ -231,7 +231,7 @@ async def order_pay_helper(oid: str, pay_system: str) -> dict:
                   'pay_date': pay_result['pay_date'],
                   'pay_system': pay_system,
                   'pay_status': pay_result['pay_status']}
-        await orders_collection.update_one({'_id': ObjectId(oid)}, {'$set': result})
+        await ORDER_COLLECTION.update_one({'_id': ObjectId(oid)}, {'$set': result})
         return {'status': f'Order {oid} is paid.'}
     else:
         return {'error': f'Order {oid} not paid.'}
@@ -242,7 +242,7 @@ async def order_return_helper(oid: str, data: ProductReturn) -> dict:
     Return products from order with that oid.
     """
     pid, quantity = data.model_dump().values()
-    order = await orders_collection.find_one({'_id': ObjectId(oid)})
+    order = await ORDER_COLLECTION.find_one({'_id': ObjectId(oid)})
 
     if order['status'] not in ('Paid', 'Returned'):
         return {'error': f'Order {oid} is not paid.'}
@@ -270,7 +270,7 @@ async def order_return_helper(oid: str, data: ProductReturn) -> dict:
     if paysystem_mock.return_payment(order['pay_id'],
                                      returned_product['return_summ'],
                                      order['pay_system'])['pay_status'] == 'Successful':
-        result = await orders_collection.update_one({'_id': ObjectId(oid)}, {'$set': order})
+        result = await ORDER_COLLECTION.update_one({'_id': ObjectId(oid)}, {'$set': order})
 
         if result.acknowledged:
             return {'status': f'Product {pid} in quantity {quantity} is returned'}
