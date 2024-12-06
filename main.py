@@ -11,7 +11,7 @@ from models import Cart, Order, ProductReturn, PayData, check_common_ids
 app = FastAPI()
 
 
-@app.get('/products/')
+@app.get("/products/")
 async def get_all_products() -> list | dict:
     """
     Return all products.
@@ -24,24 +24,28 @@ async def get_all_products() -> list | dict:
             result += [helpers.product_helper(product)]
         return result
     else:
-        return {'error': 'No products found!'}
+        return {"error": "No products found!"}
 
 
-@app.get('/products/{pid}/')
-async def get_product(pid: str = Path(annotation=Annotated[str, AfterValidator(check_common_ids)])) -> dict:
+@app.get("/products/{pid}/")
+async def get_product(
+    pid: str = Path(annotation=Annotated[str, AfterValidator(check_common_ids)]),
+) -> dict:
     """
     Return product with that pid.
     """
-    product = await PRODUCTS_COLLECTION.find_one({'_id': ObjectId(pid)})
+    product = await PRODUCTS_COLLECTION.find_one({"_id": ObjectId(pid)})
 
     if product:
         return helpers.product_helper(product)
     else:
-        return {'error': f'Product {pid} not found!'}
+        return {"error": f"Product {pid} not found!"}
 
 
-@app.get('/cart/{uid}/')
-async def get_cart(uid: str = Path(annotation=Annotated[str, AfterValidator(check_common_ids)])) -> dict:
+@app.get("/cart/{uid}/")
+async def get_cart(
+    uid: str = Path(annotation=Annotated[str, AfterValidator(check_common_ids)]),
+) -> dict:
     """
     Return cart for that uid.
     """
@@ -50,10 +54,10 @@ async def get_cart(uid: str = Path(annotation=Annotated[str, AfterValidator(chec
     if cid:
         return await helpers.cart_helper(cid)
     else:
-        return {'error': f'User {uid} not found'}
+        return {"error": f"User {uid} not found"}
 
 
-@app.post('/cart/add/')
+@app.post("/cart/add/")
 async def add_to_cart(data: Cart) -> dict:
     """
     Add to cart of user with uid quantity of products with pid.
@@ -63,13 +67,15 @@ async def add_to_cart(data: Cart) -> dict:
     if cid:
         return await helpers.cart_add_helper(data, cid)
     else:
-        return {'error': f'User {data.uid} not found'}
+        return {"error": f"User {data.uid} not found"}
 
 
-@app.delete('/cart/remove/{uid}/{pid}/{quantity}/')
-async def del_from_cart(quantity: Annotated[int, Path(ge=1)],
-                        uid: str = Path(annotation=Annotated[str, AfterValidator(check_common_ids)]),
-                        pid: str = Path(annotation=Annotated[str, AfterValidator(check_common_ids)])) -> dict:
+@app.delete("/cart/remove/{uid}/{pid}/{quantity}/")
+async def del_from_cart(
+    quantity: Annotated[int, Path(ge=1)],
+    uid: str = Path(annotation=Annotated[str, AfterValidator(check_common_ids)]),
+    pid: str = Path(annotation=Annotated[str, AfterValidator(check_common_ids)]),
+) -> dict:
     """
     Remove quantity of product with pid from cart for user with uid.
     """
@@ -78,30 +84,31 @@ async def del_from_cart(quantity: Annotated[int, Path(ge=1)],
     if cid:
         return await helpers.cart_del_helper(uid, cid, pid, quantity)
     else:
-        return {'error': f'User {uid} not found'}
+        return {"error": f"User {uid} not found"}
 
 
-@app.get('/order/{uid}/')
-async def get_user_orders(uid: str = Path(annotation=Annotated[str, AfterValidator(check_common_ids)])) -> list | dict:
+@app.get("/order/{uid}/")
+async def get_user_orders(
+    uid: str = Path(annotation=Annotated[str, AfterValidator(check_common_ids)]),
+) -> list | dict:
     """
     Return orders for that uid.
     """
     result = []
-    orders = ORDER_COLLECTION.find({'uid': uid})
+    orders = ORDER_COLLECTION.find({"uid": uid})
 
     for order in await orders.to_list():
-        order['id'] = str(order.pop('_id'))
+        order["id"] = str(order.pop("_id"))
         result += [order]
 
     if result:
         return result
     else:
-        return {'error': f'No orders found for user {uid}'}
+        return {"error": f"No orders found for user {uid}"}
 
 
-@app.post('/order/create/')
-async def create_order(data: Order,
-                       background_task: BackgroundTasks) -> dict:
+@app.post("/order/create/")
+async def create_order(data: Order, background_task: BackgroundTasks) -> dict:
     """
     Create order from cart for user with that uid.
     """
@@ -110,10 +117,10 @@ async def create_order(data: Order,
     if cid:
         return await helpers.order_add_helper(data, cid, background_task)
     else:
-        return {'error': f'User {data.uid} not found'}
+        return {"error": f"User {data.uid} not found"}
 
 
-@app.post('/order/pay/')
+@app.post("/order/pay/")
 async def pay_order(data: PayData) -> dict:
     """
     Pay order with that data.
@@ -122,33 +129,36 @@ async def pay_order(data: PayData) -> dict:
     return await helpers.order_pay_helper(oid, pay_system)
 
 
-@app.post('/order/{oid}/return/')
-async def return_order(data: ProductReturn,
-                       oid: str = Path(annotation=Annotated[str, AfterValidator(check_common_ids)])) -> dict:
+@app.post("/order/{oid}/return/")
+async def return_order(
+    data: ProductReturn,
+    oid: str = Path(annotation=Annotated[str, AfterValidator(check_common_ids)]),
+) -> dict:
     """
     Return products from order with that oid.
     """
-    order = await ORDER_COLLECTION.find_one({'_id': ObjectId(oid)})
+    order = await ORDER_COLLECTION.find_one({"_id": ObjectId(oid)})
 
     if order:
         return await helpers.order_return_helper(oid, data)
     else:
-        return {'error': f'Order {oid} not found.'}
+        return {"error": f"Order {oid} not found."}
 
 
-@app.get('/order/{oid}/return_status/')
-async def status_return_order(oid: str = Path(annotation=Annotated[str,
-                                                                   AfterValidator(check_common_ids)])) -> list | dict:
+@app.get("/order/{oid}/return_status/")
+async def status_return_order(
+    oid: str = Path(annotation=Annotated[str, AfterValidator(check_common_ids)]),
+) -> list | dict:
     """
     Return status of returned products for that oid.
     """
-    order = await ORDER_COLLECTION.find_one({'_id': ObjectId(oid)})
+    order = await ORDER_COLLECTION.find_one({"_id": ObjectId(oid)})
 
     if order:
         return await helpers.order_return_status_helper(order)
     else:
-        return {'error': f'Order {oid} not found.'}
+        return {"error": f"Order {oid} not found."}
 
 
-if __name__ == '__main__':
-    uvicorn.run('main:app', reload=True)
+if __name__ == "__main__":
+    uvicorn.run("main:app", reload=True)
