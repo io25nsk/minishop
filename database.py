@@ -1,7 +1,7 @@
 from motor.motor_asyncio import AsyncIOMotorClient
+from settings import settings
 
-DB_URI = "mongodb://localhost:27017/"
-CLIENT = AsyncIOMotorClient(DB_URI)
+CLIENT = AsyncIOMotorClient(settings.DB_URI)
 DB = CLIENT.minishop
 USERS_COLLECTION = DB.users
 PRODUCTS_COLLECTION = DB.products
